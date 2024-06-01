@@ -36,7 +36,7 @@ const PythonEditor = () => {
     if (interval >= 1) {
       return (
         Math.floor(interval) +
-        " d" +
+        " day" +
         (Math.floor(interval) > 1 ? "s" : "") +
         " ago"
       );
@@ -45,7 +45,7 @@ const PythonEditor = () => {
     if (interval >= 1) {
       return (
         Math.floor(interval) +
-        "h" +
+        " hr" +
         (Math.floor(interval) > 1 ? "s" : "") +
         " ago"
       );
@@ -54,12 +54,12 @@ const PythonEditor = () => {
     if (interval >= 1) {
       return (
         Math.floor(interval) +
-        "m" +
+        " min" +
         (Math.floor(interval) > 1 ? "s" : "") +
         " ago"
       );
     }
-    return Math.floor(seconds) + "s ago";
+    return Math.floor(seconds) + " sec ago";
   }
 
   // Handles all changes to the code
