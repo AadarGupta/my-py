@@ -3,13 +3,18 @@ import sys
 import logging
 import pandas
 import scipy
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from uuid import UUID
+from .models import Submission
+from .database import engine, SessionLocal, Base
+from sqlalchemy.orm import Session
 
 
 app = FastAPI()
+
+Base.metadata.create_all(bind=engine)
 
 # Configure CORS (Cross-Origin Resource Sharing) to allow requests from the frontend running on localhost:3000
 app.add_middleware(
@@ -20,14 +25,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Define a simple root endpoint to test if the server is running
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
 # Define the data model for the code execution request
 class CodeRequest(BaseModel):
-    code: str
+    code: str = Field(min_length=1)
+
+# Define the data model for the code submission request
+class CodeSubmit(BaseModel):
+    code: str = Field(min_length=1)
+    output: str = Field(min_length=1)
+
+# Gets the current session of the db
+def get_db():
+    try:
+        db = SessionLocal()
+        yield db
+    finally:
+        db.close()
+
+# Endpoint to submit the code
+@app.post("/submit/")
+def submit_code(submitted_code: CodeSubmit, db: Session = Depends(get_db)):
+    # Creates a submission
+    submission_model = Submission()
+    submission_model.code = submitted_code.code
+    submission_model.output = submitted_code.output
+
+    # Adds and commits changes to the db
+    db.add(submission_model)
+    db.commit()
+
+    return submission_model.to_dict()
 
 # Endpoint to test the code
 @app.post("/test/")
