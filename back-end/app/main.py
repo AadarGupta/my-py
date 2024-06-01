@@ -33,8 +33,8 @@ class CodeRequest(BaseModel):
 # Define the data model for the code submission request
 class CodeSubmit(BaseModel):
     username: str = Field(min_length=1)
-    code: str = Field(min_length=1)
-    output: str = Field(min_length=1)
+    code: str = Field(min_length=0)
+    output: str = Field(min_length=0)
 
 # Gets the current session of the db
 def get_db():
@@ -58,6 +58,17 @@ def submit_code(submitted_code: CodeSubmit, db: Session = Depends(get_db)):
     db.commit()
 
     return submission_model.to_dict()
+
+# Endpoint to open submission from id
+@app.get("/open/{id}")
+def get_submissions_by_id(id: str, db: Session = Depends(get_db)):
+    curr_submission = db.query(Submission).filter(Submission.id == int(id)).first()
+    
+    if not curr_submission:
+        raise HTTPException(status_code=404, detail="No submissions found for this username")
+
+    # Return the submissions along with the count
+    return curr_submission
 
 # Endpoint to see how many submissions have been made
 @app.get("/submissions/{username}")
