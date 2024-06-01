@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { Editor } from "@monaco-editor/react";
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
 
 const PythonEditor = () => {
   const [code, setCode] = useState<string>("print('Hello, World!')");
@@ -32,29 +31,30 @@ const PythonEditor = () => {
 
   const handleSubmitCode = async () => {
     const testResults = await handleTestCode();
-    if (testResults) {
+    if (testResults && testResults.results) {
       try {
-        const submitResponse = await axios.put(
+        const submitResponse = await axios.post(
           "http://localhost:8000/submit/",
           {
-            id: uuidv4(),
             code: code,
             output: testResults.results,
-            error: testResults.error,
           }
         );
         console.log("Submission successful", submitResponse.data);
-      } catch (submitError) {
+        alert("Submission Successful!");
+      } catch (submitError: any) {
         console.error("Error submitting code:", submitError);
-        setError(`Submission error: ${submitError}`);
+        alert(`Submission Failed: ${submitError.message}`);
       }
+    } else {
+      setError("Test results are incomplete or missing.");
     }
   };
 
   return (
-    <div className="bg-black overflow-hidden">
-      <h1 className="text-6xl text-white text-center p-2">My Py</h1>
-      <h1 className="text-2xl text-white text-center pb-2">
+    <div className="bg-black overflow-y-hidden max-h-screen">
+      <h1 className="text-3xl text-white text-center p-2 font-bold">My Py</h1>
+      <h1 className="text-xl text-white text-center pb-2">
         Python Execution Environment
       </h1>
       <div className="grid grid-cols-2 h-screen w-screen p-2">
@@ -69,32 +69,35 @@ const PythonEditor = () => {
               minimap: {
                 enabled: false,
               },
+              padding: {
+                top: 16,
+              },
               contextmenu: false,
             }}
             onChange={handleChange}
           />
           <button
             onClick={handleTestCode}
-            className="m-4 bg-[#fed439] hover:opacity-85 text-black font-bold py-2 px-4 rounded"
+            className="m-4 bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
           >
             Test Code
           </button>
           <button
             onClick={handleSubmitCode}
-            className="m-4 bg-blue-500 hover:opacity-85 text-black font-bold py-2 px-4 rounded"
+            className="m-4 bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
           >
             Submit Code
           </button>
         </div>
-        <div className="p-4 h-[80vh] bg-[#1e1e1e] text-white border-l-2 border-black">
+        <div className="p-4 h-[80vh] bg-[#1e1e1e] text-white border-l-2 border-black overflow-scroll">
           {error ? (
             <div>
-              <p className="text-2xl">Error:</p>
+              <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
               <pre className="whitespace-pre-wrap break-all">{error}</pre>
             </div>
           ) : (
             <div>
-              <p className="text-2xl">Output:</p>
+              <p className="text-2xl pb-2 font-bold text-yellow-300">Output</p>
               <pre className="whitespace-pre-wrap break-all">{output}</pre>
             </div>
           )}
