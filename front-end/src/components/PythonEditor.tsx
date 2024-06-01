@@ -91,6 +91,24 @@ const PythonEditor = () => {
     }
   };
 
+  // Sets code to the open submission based on id
+  const handleOpenSubmission = async () => {
+    const id = prompt("Please enter a submission id:");
+    if (!id) {
+      alert("id is required to open the submission.");
+      return;
+    }
+
+    // Queries the backend endpoint to get the submission from id
+    try {
+      const response = await axios.get(`http://localhost:8000/open/${id}`);
+      setCode(response.data.code);
+    } catch (error: any) {
+      console.error("Error opening submission:", error);
+      alert(`Error opening submission ${id}`);
+    }
+  };
+
   // Tests the code
   const handleTestCode = async () => {
     try {
@@ -100,9 +118,9 @@ const PythonEditor = () => {
       setOutput(response.data.results);
       setError(response.data.error);
       return response.data;
-    } catch (error) {
-      console.error("Error executing code:", error);
-      setError(`Error: ${error}`);
+    } catch (err: any) {
+      console.error("Error executing code:", err);
+      setError(`Error: ${err}`);
       return null;
     }
   };
@@ -118,8 +136,9 @@ const PythonEditor = () => {
 
     // Checks if code is valid
     const testResults = await handleTestCode();
-    if (testResults && testResults.results) {
+    if (testResults && !testResults.error) {
       try {
+        console.log(testResults);
         // Calls the backend endpoint to submit the code with results and the username
         const submitResponse = await axios.post(
           "http://localhost:8000/submit/",
@@ -166,12 +185,18 @@ const PythonEditor = () => {
             Submit Code
           </button>
         </div>
-        <div className="flex justify-end items-center w-[50vw] px-4">
+        <div className="flex justify-end items-center w-[50vw] px-4 gap-10">
           <button
             onClick={handleViewSubmissions}
             className="bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
           >
             View Submissions
+          </button>
+          <button
+            onClick={handleOpenSubmission}
+            className="bg-blue-400 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+          >
+            Open Submission
           </button>
         </div>
       </div>
