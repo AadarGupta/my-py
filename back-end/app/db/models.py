@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
-from .db.database import Base
+from .database import Base
 
 class Submission(Base):
     # Save it under the table "submissions"
