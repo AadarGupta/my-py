@@ -4,8 +4,8 @@ Python compiler
 ## How To Run
 
 ### Front-End
-1. Navigate within the front-end folder
-2. Run npm install to download the required packages
+1. Navigate within the ```front-end``` folder
+2. Run ```npm install``` to download the required packages
 3. Run ```npm run dev``` to start the front-end server
 
 ### Back-End 
