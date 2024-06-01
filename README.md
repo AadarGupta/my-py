@@ -1,5 +1,5 @@
 # my-py
-Python compiler
+Python 3.0 Compiler (with pandas and scipy support) for DataCurve assessment
 
 ## How To Run
 
