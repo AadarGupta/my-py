@@ -52,47 +52,53 @@ const PythonEditor = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 h-screen w-screen bg-white">
-      <div className="p-4">
-        <Editor
-          height="90vh"
-          defaultLanguage="python"
-          theme="vs-dark"
-          value={code}
-          options={{
-            fontSize: 18,
-            minimap: {
-              enabled: false,
-            },
-            contextmenu: false,
-          }}
-          onChange={handleChange}
-        />
-        <button
-          onClick={handleTestCode}
-          className="mt-4 bg-[#fed439] hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-        >
-          Test Code
-        </button>
-        <button
-          onClick={handleSubmitCode}
-          className="mt-4 bg-blue-500 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-        >
-          Submit Code
-        </button>
-      </div>
-      <div className="p-4 bg-black text-white">
-        {error ? (
-          <div>
-            <p className="text-2xl">Error:</p>
-            <pre className="whitespace-pre-wrap break-all">{error}</pre>
-          </div>
-        ) : (
-          <div>
-            <p className="text-2xl">Output:</p>
-            <pre className="whitespace-pre-wrap break-all">{output}</pre>
-          </div>
-        )}
+    <div className="bg-black overflow-hidden">
+      <h1 className="text-6xl text-white text-center p-2">My Py</h1>
+      <h1 className="text-2xl text-white text-center pb-2">
+        Python Execution Environment
+      </h1>
+      <div className="grid grid-cols-2 h-screen w-screen p-2">
+        <div className="border-r-2 border-black">
+          <Editor
+            height="80vh"
+            defaultLanguage="python"
+            theme="vs-dark"
+            value={code}
+            options={{
+              fontSize: 18,
+              minimap: {
+                enabled: false,
+              },
+              contextmenu: false,
+            }}
+            onChange={handleChange}
+          />
+          <button
+            onClick={handleTestCode}
+            className="m-4 bg-[#fed439] hover:opacity-85 text-black font-bold py-2 px-4 rounded"
+          >
+            Test Code
+          </button>
+          <button
+            onClick={handleSubmitCode}
+            className="m-4 bg-blue-500 hover:opacity-85 text-black font-bold py-2 px-4 rounded"
+          >
+            Submit Code
+          </button>
+        </div>
+        <div className="p-4 h-[80vh] bg-[#1e1e1e] text-white border-l-2 border-black">
+          {error ? (
+            <div>
+              <p className="text-2xl">Error:</p>
+              <pre className="whitespace-pre-wrap break-all">{error}</pre>
+            </div>
+          ) : (
+            <div>
+              <p className="text-2xl">Output:</p>
+              <pre className="whitespace-pre-wrap break-all">{output}</pre>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
