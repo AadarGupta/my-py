@@ -7,8 +7,8 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from uuid import UUID
-from .models import Submission
-from .database import engine, SessionLocal, Base
+from .db.models import Submission
+from .db.database import engine, SessionLocal, Base
 from sqlalchemy.orm import Session
 from datetime import datetime
 from typing import Optional

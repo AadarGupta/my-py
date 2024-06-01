@@ -4,15 +4,16 @@ import { Editor } from "@monaco-editor/react";
 import axios from "axios";
 
 const PythonEditor = () => {
+  // Variables for code, results, errors, most recent submission and how long ago a submission was made
   const [code, setCode] = useState<string>("print('Hello, World!')");
   const [output, setOutput] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [timeAgo, setTimeAgo] = useState<string>("");
   const [lastSubmissionDate, setLastSubmissionDate] = useState<Date | null>(
     null
   );
 
-  const [timeAgo, setTimeAgo] = useState<string>("");
-
+  // Updates every second to track time since last submission
   useEffect(() => {
     const timer = setInterval(() => {
       if (lastSubmissionDate) {
@@ -27,6 +28,7 @@ const PythonEditor = () => {
     return () => clearInterval(timer);
   }, [lastSubmissionDate]);
 
+  // Calculates whether the time since last submission should be days/hours/mins/seconds
   function timeSince(date: Date): string {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
 
@@ -34,7 +36,7 @@ const PythonEditor = () => {
     if (interval >= 1) {
       return (
         Math.floor(interval) +
-        " day" +
+        " d" +
         (Math.floor(interval) > 1 ? "s" : "") +
         " ago"
       );
@@ -60,12 +62,14 @@ const PythonEditor = () => {
     return Math.floor(seconds) + "s ago";
   }
 
+  // Handles all changes to the code
   const handleChange = (value?: string) => {
     if (value !== undefined) {
       setCode(value);
     }
   };
 
+  // Shows number of submissions based on the username
   const handleViewSubmissions = async () => {
     const username = prompt(
       "Please enter your username to view your submissions:"
@@ -75,6 +79,7 @@ const PythonEditor = () => {
       return;
     }
 
+    // Queries the backend endpoint to find how many submissions have been made by username
     try {
       const response = await axios.get(
         `http://localhost:8000/submissions/${username}`
@@ -86,6 +91,7 @@ const PythonEditor = () => {
     }
   };
 
+  // Tests the code
   const handleTestCode = async () => {
     try {
       const response = await axios.post("http://localhost:8000/test/", {
@@ -101,6 +107,7 @@ const PythonEditor = () => {
     }
   };
 
+  // Submits the code with a corresponding username
   const handleSubmitCode = async () => {
     const username = prompt("Please enter your username for the submission:");
 
@@ -109,9 +116,11 @@ const PythonEditor = () => {
       return;
     }
 
+    // Checks if code is valid
     const testResults = await handleTestCode();
     if (testResults && testResults.results) {
       try {
+        // Calls the backend endpoint to submit the code with results and the username
         const submitResponse = await axios.post(
           "http://localhost:8000/submit/",
           {
@@ -120,22 +129,25 @@ const PythonEditor = () => {
             username: username,
           }
         );
+
+        // Alerts the user that the submission was successful and updates last submission
         console.log("Submission successful", submitResponse.data);
         alert("Submission Successful!");
-
         setLastSubmissionDate(new Date());
       } catch (submitError: any) {
+        // Alerts the user that the submission has failed
         console.error("Error submitting code:", submitError);
         alert(`Submission Failed: ${submitError.message}`);
       }
     } else {
-      setError("Test results are incomplete or missing.");
+      // Alerts the user that the results are not sufficient
+      alert("Test results are incomplete or missing.");
     }
   };
 
   return (
     <div className="bg-black overflow-y-hidden h-screen">
-      <h1 className="text-3xl text-white text-center p-2 font-bold">My Py</h1>
+      <h1 className="text-3xl text-white text-center p-2 font-bold">MyPy</h1>
       <h1 className="text-xl text-white text-center pb-2">
         Python Execution Environment
       </h1>
