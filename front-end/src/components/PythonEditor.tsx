@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import axios from "axios";
 
@@ -7,10 +7,82 @@ const PythonEditor = () => {
   const [code, setCode] = useState<string>("print('Hello, World!')");
   const [output, setOutput] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const [lastSubmissionDate, setLastSubmissionDate] = useState<Date | null>(
+    null
+  );
+
+  const [timeAgo, setTimeAgo] = useState<string>("");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (lastSubmissionDate) {
+        setTimeAgo(timeSince(lastSubmissionDate));
+      }
+    }, 1000);
+
+    if (lastSubmissionDate) {
+      setTimeAgo(timeSince(lastSubmissionDate));
+    }
+
+    return () => clearInterval(timer);
+  }, [lastSubmissionDate]);
+
+  function timeSince(date: Date): string {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+
+    let interval = seconds / 86400;
+    if (interval >= 1) {
+      return (
+        Math.floor(interval) +
+        " day" +
+        (Math.floor(interval) > 1 ? "s" : "") +
+        " ago"
+      );
+    }
+    interval = seconds / 3600;
+    if (interval >= 1) {
+      return (
+        Math.floor(interval) +
+        "h" +
+        (Math.floor(interval) > 1 ? "s" : "") +
+        " ago"
+      );
+    }
+    interval = seconds / 60;
+    if (interval >= 1) {
+      return (
+        Math.floor(interval) +
+        "m" +
+        (Math.floor(interval) > 1 ? "s" : "") +
+        " ago"
+      );
+    }
+    return Math.floor(seconds) + "s ago";
+  }
 
   const handleChange = (value?: string) => {
     if (value !== undefined) {
       setCode(value);
+    }
+  };
+
+  const handleViewSubmissions = async () => {
+    const username = prompt(
+      "Please enter your username to view your submissions:"
+    );
+    if (!username) {
+      alert("Username is required to view submissions.");
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/submissions/${username}`
+      );
+      alert(`You have made ${response.data} submission(s)`);
+    } catch (error: any) {
+      console.error("Error fetching submissions:", error);
+      alert(`Error fetching submissions: ${error}`);
     }
   };
 
@@ -21,15 +93,22 @@ const PythonEditor = () => {
       });
       setOutput(response.data.results);
       setError(response.data.error);
-      return response.data; // Return data for further processing
+      return response.data;
     } catch (error) {
       console.error("Error executing code:", error);
       setError(`Error: ${error}`);
-      return null; // In case of error, return null to prevent further actions
+      return null;
     }
   };
 
   const handleSubmitCode = async () => {
+    const username = prompt("Please enter your username for the submission:");
+
+    if (!username) {
+      alert("Username is required to submit the code.");
+      return;
+    }
+
     const testResults = await handleTestCode();
     if (testResults && testResults.results) {
       try {
@@ -38,10 +117,13 @@ const PythonEditor = () => {
           {
             code: code,
             output: testResults.results,
+            username: username,
           }
         );
         console.log("Submission successful", submitResponse.data);
         alert("Submission Successful!");
+
+        setLastSubmissionDate(new Date());
       } catch (submitError: any) {
         console.error("Error submitting code:", submitError);
         alert(`Submission Failed: ${submitError.message}`);
@@ -52,15 +134,44 @@ const PythonEditor = () => {
   };
 
   return (
-    <div className="bg-black overflow-y-hidden max-h-screen">
+    <div className="bg-black overflow-y-hidden h-screen">
       <h1 className="text-3xl text-white text-center p-2 font-bold">My Py</h1>
       <h1 className="text-xl text-white text-center pb-2">
         Python Execution Environment
       </h1>
-      <div className="grid grid-cols-2 h-screen w-screen p-2">
+      <div className="pt-4 flex">
+        <div className="flex justify-start items-center w-[50vw] gap-10 px-4">
+          <button
+            onClick={handleTestCode}
+            className="bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+          >
+            Test Code
+          </button>
+          <button
+            onClick={handleSubmitCode}
+            className="bg-red-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+          >
+            Submit Code
+          </button>
+        </div>
+        <div className="flex justify-end items-center w-[50vw] px-4">
+          <button
+            onClick={handleViewSubmissions}
+            className="bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+          >
+            View Submissions
+          </button>
+        </div>
+      </div>
+      <p className="text-sm text-white px-4 py-2 justify-end flex text-right">
+        {lastSubmissionDate
+          ? `Last Submission: ${timeAgo}`
+          : "No submissions yet"}
+      </p>
+      <div className="grid grid-cols-2 w-screen">
         <div className="border-r-2 border-black">
           <Editor
-            height="80vh"
+            height="75vh"
             defaultLanguage="python"
             theme="vs-dark"
             value={code}
@@ -76,20 +187,8 @@ const PythonEditor = () => {
             }}
             onChange={handleChange}
           />
-          <button
-            onClick={handleTestCode}
-            className="m-4 bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-          >
-            Test Code
-          </button>
-          <button
-            onClick={handleSubmitCode}
-            className="m-4 bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-          >
-            Submit Code
-          </button>
         </div>
-        <div className="p-4 h-[80vh] bg-[#1e1e1e] text-white border-l-2 border-black overflow-scroll">
+        <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-2 border-black overflow-scroll">
           {error ? (
             <div>
               <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
