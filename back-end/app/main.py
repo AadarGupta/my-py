@@ -10,7 +10,8 @@ from uuid import UUID
 from .models import Submission
 from .database import engine, SessionLocal, Base
 from sqlalchemy.orm import Session
-
+from datetime import datetime
+from typing import Optional
 
 app = FastAPI()
 
@@ -31,6 +32,7 @@ class CodeRequest(BaseModel):
 
 # Define the data model for the code submission request
 class CodeSubmit(BaseModel):
+    username: str = Field(min_length=1)
     code: str = Field(min_length=1)
     output: str = Field(min_length=1)
 
@@ -49,12 +51,24 @@ def submit_code(submitted_code: CodeSubmit, db: Session = Depends(get_db)):
     submission_model = Submission()
     submission_model.code = submitted_code.code
     submission_model.output = submitted_code.output
+    submission_model.username = submitted_code.username
 
     # Adds and commits changes to the db
     db.add(submission_model)
     db.commit()
 
     return submission_model.to_dict()
+
+# Endpoint to see how many submissions have been made
+@app.get("/submissions/{username}")
+def get_submissions_by_username(username: str, db: Session = Depends(get_db)):
+    submissions = db.query(Submission).filter(Submission.username == username).all()
+    
+    if not submissions:
+        raise HTTPException(status_code=404, detail="No submissions found for this username")
+
+    # Return the submissions along with the count
+    return len(submissions)
 
 # Endpoint to test the code
 @app.post("/test/")
