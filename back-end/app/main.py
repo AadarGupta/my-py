@@ -65,7 +65,7 @@ def get_submissions_by_id(id: str, db: Session = Depends(get_db)):
     curr_submission = db.query(Submission).filter(Submission.id == int(id)).first()
     
     if not curr_submission:
-        raise HTTPException(status_code=404, detail="No submissions found for this username")
+        raise HTTPException(status_code=404, detail="No submissions found for this id")
 
     # Return the submissions along with the count
     return curr_submission
@@ -76,7 +76,7 @@ def get_submissions_by_username(username: str, db: Session = Depends(get_db)):
     submissions = db.query(Submission).filter(Submission.username == username).all()
     
     if not submissions:
-        raise HTTPException(status_code=404, detail="No submissions found for this username")
+        return 0
 
     # Return the submissions along with the count
     return len(submissions)
