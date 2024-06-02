@@ -167,7 +167,7 @@ const PythonEditor = () => {
 
   return (
     <div className="bg-black overflow-y-hidden h-screen">
-      <h1 className="text-3xl text-white text-center p-2 font-bold">MyPy</h1>
+      <h1 className="text-3xl text-white text-center p-2 font-bold">RunPy</h1>
       <h1 className="text-xl text-white text-center pb-2">
         Python Execution Environment
       </h1>
