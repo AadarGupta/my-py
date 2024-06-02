@@ -2,6 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import axios from "axios";
+import { Modal, Button } from "react-bootstrap";
+
+interface Submission {
+  id: number;
+  submitted_at: string;
+  username: string;
+  code: string;
+  output: string;
+}
 
 const PythonEditor = () => {
   // Variables for code, results, errors, most recent submission and how long ago a submission was made
@@ -12,6 +21,8 @@ const PythonEditor = () => {
   const [lastSubmissionDate, setLastSubmissionDate] = useState<Date | null>(
     null
   );
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
   // Updates every second to track time since last submission
   useEffect(() => {
@@ -74,29 +85,29 @@ const PythonEditor = () => {
     const username = prompt(
       "Please enter your username to view your submissions:"
     );
-    if (!username) {
-      alert("Username is required to view submissions.");
-      return;
-    }
+    if (!username) return;
 
-    // Queries the backend endpoint to find how many submissions have been made by username
     try {
       const response = await axios.get(
         `http://localhost:8000/submissions/${username}`
       );
-      alert(`You have made ${response.data} submission(s)`);
-    } catch (error: any) {
-      console.error("Error fetching submissions:", error);
+      setSubmissions(response.data);
+      setShowModal(true);
+    } catch (error) {
       alert(`Error fetching submissions: ${error}`);
     }
   };
 
   // Sets code to the open submission based on id
-  const handleOpenSubmission = async () => {
-    const id = prompt("Please enter a submission id:");
-    if (!id) {
-      alert("id is required to open the submission.");
-      return;
+  const handleOpenSubmission = async (code_id: string | null) => {
+    setShowModal(false);
+    let id = code_id;
+    if (!code_id) {
+      id = prompt("Please enter a submission id:");
+      if (!id) {
+        alert("id is required to open the submission.");
+        return;
+      }
     }
 
     // Queries the backend endpoint to get the submission from id
@@ -166,78 +177,101 @@ const PythonEditor = () => {
   };
 
   return (
-    <div className="bg-black overflow-y-hidden h-screen">
-      <h1 className="text-3xl text-white text-center p-2 font-bold">RunPy</h1>
-      <h1 className="text-xl text-white text-center pb-2">
-        Python Execution Environment
-      </h1>
-      <div className="pt-4 flex">
-        <div className="flex justify-start items-center w-[50vw] gap-10 px-4">
-          <button
-            onClick={handleTestCode}
-            className="bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-          >
-            Test Code
-          </button>
-          <button
-            onClick={handleSubmitCode}
-            className="bg-red-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-          >
-            Submit Code
-          </button>
+    <div>
+      <div className="bg-black overflow-y-hidden h-screen">
+        <h1 className="text-3xl text-white text-center p-2 font-bold">RunPy</h1>
+        <h1 className="text-xl text-white text-center pb-2">
+          Python Execution Environment
+        </h1>
+        <div className="pt-4 flex">
+          <div className="flex justify-start items-center w-[50vw] gap-10 px-4">
+            <button
+              onClick={handleTestCode}
+              className="bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+            >
+              Test Code
+            </button>
+            <button
+              onClick={handleSubmitCode}
+              className="bg-red-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+            >
+              Submit Code
+            </button>
+          </div>
+          <div className="flex justify-end items-center w-[50vw] px-4 gap-10">
+            <button
+              onClick={handleViewSubmissions}
+              className="bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+            >
+              Open Submission
+            </button>
+          </div>
         </div>
-        <div className="flex justify-end items-center w-[50vw] px-4 gap-10">
-          <button
-            onClick={handleViewSubmissions}
-            className="bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
+        <p className="text-sm text-white px-4 py-2 justify-end flex text-right">
+          {lastSubmissionDate
+            ? `Last Submission: ${timeAgo}`
+            : "No submissions yet"}
+        </p>
+        <div className="flex justify-center">
+          <div
+            className={
+              showModal
+                ? "bg-[#1e1e1e] top-0 p-2 text-white h-[100%] w-[50vw] text-center"
+                : "hidden"
+            }
           >
-            View Submissions
-          </button>
-          <button
-            onClick={handleOpenSubmission}
-            className="bg-blue-400 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-          >
-            Open Submission
-          </button>
+            <h1 className="py-2 text-xl font-bold">Submissions</h1>
+            {submissions.length > 0 ? (
+              submissions.map((sub) => (
+                <p
+                  key={sub.id}
+                  onClick={() => handleOpenSubmission(String(sub.id))}
+                  className="cursor-pointer py-2"
+                >
+                  {"id #"}
+                  {sub.id} - {sub.username}
+                </p>
+              ))
+            ) : (
+              <p>No submissions to display.</p>
+            )}
+          </div>
         </div>
-      </div>
-      <p className="text-sm text-white px-4 py-2 justify-end flex text-right">
-        {lastSubmissionDate
-          ? `Last Submission: ${timeAgo}`
-          : "No submissions yet"}
-      </p>
-      <div className="grid grid-cols-2 w-screen">
-        <div className="border-r-4 border-black">
-          <Editor
-            height="75vh"
-            defaultLanguage="python"
-            theme="vs-dark"
-            value={code}
-            options={{
-              fontSize: 18,
-              minimap: {
-                enabled: false,
-              },
-              padding: {
-                top: 16,
-              },
-              contextmenu: false,
-            }}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-4 border-black overflow-scroll">
-          {error ? (
-            <div>
-              <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
-              <pre className="whitespace-pre-wrap break-all">{error}</pre>
-            </div>
-          ) : (
-            <div>
-              <p className="text-2xl pb-2 font-bold text-yellow-300">Output</p>
-              <pre className="whitespace-pre-wrap break-all">{output}</pre>
-            </div>
-          )}
+        <div className={!showModal ? "grid grid-cols-2 w-screen" : "hidden"}>
+          <div className="border-r-4 border-black">
+            <Editor
+              height="75vh"
+              defaultLanguage="python"
+              theme="vs-dark"
+              value={code}
+              options={{
+                fontSize: 18,
+                minimap: {
+                  enabled: false,
+                },
+                padding: {
+                  top: 16,
+                },
+                contextmenu: false,
+              }}
+              onChange={handleChange}
+            />
+          </div>
+          <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-4 border-black overflow-scroll">
+            {error ? (
+              <div>
+                <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
+                <pre className="whitespace-pre-wrap break-all">{error}</pre>
+              </div>
+            ) : (
+              <div>
+                <p className="text-2xl pb-2 font-bold text-yellow-300">
+                  Output
+                </p>
+                <pre className="whitespace-pre-wrap break-all">{output}</pre>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
