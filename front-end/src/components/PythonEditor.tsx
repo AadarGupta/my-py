@@ -103,9 +103,10 @@ const PythonEditor = () => {
     try {
       const response = await axios.get(`http://localhost:8000/open/${id}`);
       setCode(response.data.code);
+      setOutput("");
     } catch (error: any) {
       console.error("Error opening submission:", error);
-      alert(`Error opening submission ${id}`);
+      alert(`Could not open submission with id #${id}`);
     }
   };
 
@@ -206,7 +207,7 @@ const PythonEditor = () => {
           : "No submissions yet"}
       </p>
       <div className="grid grid-cols-2 w-screen">
-        <div className="border-r-2 border-black">
+        <div className="border-r-4 border-black">
           <Editor
             height="75vh"
             defaultLanguage="python"
@@ -225,7 +226,7 @@ const PythonEditor = () => {
             onChange={handleChange}
           />
         </div>
-        <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-2 border-black overflow-scroll">
+        <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-4 border-black overflow-scroll">
           {error ? (
             <div>
               <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
