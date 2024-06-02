@@ -2,15 +2,10 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import axios from "axios";
-import { Modal, Button } from "react-bootstrap";
-
-interface Submission {
-  id: number;
-  submitted_at: string;
-  username: string;
-  code: string;
-  output: string;
-}
+import CustomButton from "./CustomButton";
+import Submission from "@/interfaces/Submission";
+import SubmissionsList from "./SubmissionsList";
+import Terminal from "./Terminal";
 
 const PythonEditor = () => {
   // Variables for code, results, errors, most recent submission and how long ago a submission was made
@@ -23,6 +18,7 @@ const PythonEditor = () => {
   );
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [user, setUser] = useState("user");
 
   // Updates every second to track time since last submission
   useEffect(() => {
@@ -115,6 +111,7 @@ const PythonEditor = () => {
       const response = await axios.get(`http://localhost:8000/open/${id}`);
       setCode(response.data.code);
       setOutput("");
+      setUser(response.data.username);
     } catch (error: any) {
       console.error("Error opening submission:", error);
       alert(`Could not open submission with id #${id}`);
@@ -138,15 +135,21 @@ const PythonEditor = () => {
   };
 
   // Submits the code with a corresponding username
-  const handleSubmitCode = async () => {
-    const username = prompt("Please enter your username for the submission:");
-
-    if (!username) {
-      alert("Username is required to submit the code.");
-      return;
+  const handleSubmitCode = async (name?: string | null) => {
+    let username: string | null = "";
+    if (!name || name == "user") {
+      username = prompt("Please enter your username for the submission:");
+      if (!username) {
+        alert("Username is required to submit the code.");
+        return;
+      }
+    } else {
+      username = name;
     }
 
-    // Checks if code is valid
+    setUser(username);
+
+    // Proceed with testing and submitting the code
     const testResults = await handleTestCode();
     if (testResults && !testResults.error) {
       try {
@@ -185,26 +188,17 @@ const PythonEditor = () => {
         </h1>
         <div className="pt-4 flex">
           <div className="flex justify-start items-center w-[50vw] gap-10 px-4">
-            <button
-              onClick={handleTestCode}
-              className="bg-yellow-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-            >
+            <CustomButton color="yellow" onClick={handleTestCode}>
               Test Code
-            </button>
-            <button
-              onClick={handleSubmitCode}
-              className="bg-red-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-            >
+            </CustomButton>
+            <CustomButton color="red" onClick={() => handleSubmitCode(null)}>
               Submit Code
-            </button>
+            </CustomButton>
           </div>
           <div className="flex justify-end items-center w-[50vw] px-4 gap-10">
-            <button
-              onClick={handleViewSubmissions}
-              className="bg-blue-600 hover:opacity-85 text-white font-bold py-2 px-4 rounded"
-            >
+            <CustomButton color="blue" onClick={handleViewSubmissions}>
               Open Submission
-            </button>
+            </CustomButton>
           </div>
         </div>
         <p className="text-sm text-white px-4 py-2 justify-end flex text-right">
@@ -213,29 +207,12 @@ const PythonEditor = () => {
             : "No submissions yet"}
         </p>
         <div className="flex justify-center">
-          <div
-            className={
-              showModal
-                ? "bg-[#1e1e1e] top-0 p-2 text-white h-[100%] w-[50vw] text-center"
-                : "hidden"
-            }
-          >
-            <h1 className="py-2 text-xl font-bold">Submissions</h1>
-            {submissions.length > 0 ? (
-              submissions.map((sub) => (
-                <p
-                  key={sub.id}
-                  onClick={() => handleOpenSubmission(String(sub.id))}
-                  className="cursor-pointer py-2"
-                >
-                  {"id #"}
-                  {sub.id} - {sub.username}
-                </p>
-              ))
-            ) : (
-              <p>No submissions to display.</p>
-            )}
-          </div>
+          <SubmissionsList
+            showModal={showModal}
+            submissions={submissions}
+            handleClose={() => setShowModal(false)}
+            handleOpenSubmission={handleOpenSubmission}
+          />
         </div>
         <div className={!showModal ? "grid grid-cols-2 w-screen" : "hidden"}>
           <div className="border-r-4 border-black">
@@ -257,21 +234,13 @@ const PythonEditor = () => {
               onChange={handleChange}
             />
           </div>
-          <div className="p-4 pb-0 h-[75vh] bg-[#1e1e1e] text-white border-l-4 border-black overflow-scroll">
-            {error ? (
-              <div>
-                <p className="text-2xl pb-2 font-bold text-red-500">Error</p>
-                <pre className="whitespace-pre-wrap break-all">{error}</pre>
-              </div>
-            ) : (
-              <div>
-                <p className="text-2xl pb-2 font-bold text-yellow-300">
-                  Output
-                </p>
-                <pre className="whitespace-pre-wrap break-all">{output}</pre>
-              </div>
-            )}
-          </div>
+          <Terminal
+            user={user}
+            output={output}
+            error={error}
+            onTestCode={handleTestCode}
+            onSubmitCode={handleSubmitCode}
+          />
         </div>
       </div>
     </div>
