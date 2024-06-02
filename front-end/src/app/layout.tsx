@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "My Py",
-  description: "Python code editor",
+  title: "RunPy",
+  description: "Python 3.0 Compiler",
 };
 
 export default function RootLayout({
