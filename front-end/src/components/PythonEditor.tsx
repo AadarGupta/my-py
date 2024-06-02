@@ -6,6 +6,7 @@ import CustomButton from "./CustomButton";
 import Submission from "@/interfaces/Submission";
 import SubmissionsList from "./SubmissionsList";
 import Terminal from "./Terminal";
+import RoundIconButton from "./RoundIconButton";
 
 const PythonEditor = () => {
   // Variables for code, results, errors, most recent submission and how long ago a submission was made
@@ -19,6 +20,7 @@ const PythonEditor = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState("user");
+  const [showHelp, setShowHelp] = useState(false);
 
   // Updates every second to track time since last submission
   useEffect(() => {
@@ -68,6 +70,18 @@ const PythonEditor = () => {
     }
     return Math.floor(seconds) + " sec ago";
   }
+
+  const showHelpMenu = () => {
+    alert(`HELP MENU:
+
+Test Code to run your code.
+Submit Code to save your code.
+Open Submission to open/view past submissions.
+
+OR
+
+Terminal: Type 'help' to view available commands`);
+  };
 
   // Handles all changes to the code
   const handleChange = (value?: string) => {
@@ -195,17 +209,23 @@ const PythonEditor = () => {
               Submit Code
             </CustomButton>
           </div>
-          <div className="flex justify-end items-center w-[50vw] px-4 gap-10">
+          <div className="flex justify-end items-center w-[50vw] px-4 gap-4">
             <CustomButton color="blue" onClick={handleViewSubmissions}>
               Open Submission
             </CustomButton>
+            <RoundIconButton
+              onClick={showHelpMenu}
+              icon={<span className="text-black text-2xl">?</span>}
+            />
           </div>
         </div>
-        <p className="text-sm text-white px-4 py-2 justify-end flex text-right">
-          {lastSubmissionDate
-            ? `Last Submission: ${timeAgo}`
-            : "No submissions yet"}
-        </p>
+        <div className="px-4 py-2 justify-end items-end flex">
+          <p className="text-sm text-white text-right">
+            {lastSubmissionDate
+              ? `Last Submission: ${timeAgo}`
+              : "No submissions yet"}
+          </p>
+        </div>
         <div className="flex justify-center">
           <SubmissionsList
             showModal={showModal}
