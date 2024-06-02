@@ -76,10 +76,10 @@ def get_submissions_by_username(username: str, db: Session = Depends(get_db)):
     submissions = db.query(Submission).filter(Submission.username == username).all()
     
     if not submissions:
-        return 0
+        raise HTTPException(status_code=404, detail="No submissions found for this username") 
 
     # Return the submissions along with the count
-    return len(submissions)
+    return submissions
 
 # Endpoint to test the code
 @app.post("/test/")
